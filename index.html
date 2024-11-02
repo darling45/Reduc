@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur de Réduction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Style de la barre de navigation */
+        .navbar {
+            background-color: #007bff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+            position: relative; /* Position relative pour positionner l'icône */
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        /* Styles pour les différents thèmes */
+        body.light-theme {
+            background-color: #f4f4f4;
+            color: black;
+        }
+
+        .container.light-theme {
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-theme {
+            background-color: #181818;
+            color: white;
+        }
+
+        .container.dark-theme {
+            background: #242424;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        body.blue-theme {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .container.blue-theme {
+            background: #0056b3;
+        }
+
+        body.green-theme {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .container.green-theme {
+            background: #218838;
+        }
+
+        body.red-theme {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .container.red-theme {
+            background: #c82333;
+        }
+
+        /* Icône de changement de thème */
+        .theme-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <div class="navbar">
+        <a href="https://lapmtg.mtg.lapeyre.fr:8443/#/home" target="_blank">AGC 3.0</a>
+        <a href="https://www.lapeyre.fr" target="_blank">Lapeyre</a>
+    </div>
+    <div class="container light-theme">
+        <span class="theme-icon" id="themeToggle">🌞</span>
+        <h1>Calculateur de Réduction</h1>
+        <form id="calculator">
+            <label for="amount">Montant HT :</label>
+            <input type="number" id="amount" placeholder="Entrez le montant HT" step="0.01" required>
+
+            <label for="vat">TVA (%) :</label>
+            <input type="text" id="vat" placeholder="Entrez le taux de TVA" required>
+
+            <label for="discount">Réduction (%) ou Montant :</label>
+            <input type="text" id="discount" placeholder="Ex: 20% ou 100" required>
+
+            <button type="submit">Calculer</button>
+        </form>
+        <div id="result"></div>
+        <button id="copyButton" style="display:none;">Copier le montant</button>
+    </div>
+    <script>
+        let currentTheme = 0; // 0: clair, 1: sombre, 2: bleu, 3: vert, 4: rouge
+        const themes = ['light-theme', 'dark-theme', 'blue-theme', 'green-theme', 'red-theme'];
+
+        document.getElementById('calculator').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const amount = parseFloat(document.getElementById('amount').value);
+            const vat = parseFloat(document.getElementById('vat').value.replace(',', '.'));
+            const discountInput = document.getElementById('discount').value.replace(',', '.');
+
+            const totalVAT = amount + (amount * (vat / 100));
+            let finalPrice;
+            let discountValue;
+
+            // Vérifie si le champ de réduction contient un pourcentage
+            if (discountInput.includes('%')) {
+                const discountPercent = parseFloat(discountInput.replace('%', ''));
+                discountValue = (totalVAT * (discountPercent / 100));
+                finalPrice = totalVAT - discountValue;
+            } else {
+                // Montant de réduction
+                discountValue = parseFloat(discountInput);
+                finalPrice = totalVAT - discountValue;
+            }
+
+            const resultText = `Montant final : ${finalPrice.toFixed(2)} € (Réduction de : ${discountValue.toFixed(2)} €)`;
+            document.getElementById('result').innerText = resultText;
+
+            // Afficher le bouton de copie
+            document.getElementById('copyButton').style.display = 'block';
+
+            // Ajouter un événement pour le bouton de copie
+            document.getElementById('copyButton').onclick = function() {
+                navigator.clipboard.writeText(finalPrice.toFixed(2)).then(function() {
+                    alert('Montant copié dans le presse-papiers : ' + finalPrice.toFixed(2) + ' €');
+                }, function(err) {
+                    console.error('Erreur lors de la copie : ', err);
+                });
+            };
+        });
+
+        // Changement de thème avec l'icône
+        const themeToggleIcon = document.getElementById('themeToggle');
+        themeToggleIcon.addEventListener('click', function() {
+            // Retirer le thème actuel
+            document.body.classList.remove(themes[currentTheme]);
+            const container = document.querySelector('.container');
+            container.classList.remove(themes[currentTheme]);
+
+            // Passer au thème suivant
+            currentTheme = (currentTheme + 1) % themes.length;
+
+            // Ajouter le nouveau thème
+            document.body.classList.add(themes[currentTheme]);
+            container.classList.add(themes[currentTheme]);
+
+            // Mettre à jour l'icône
+            themeToggleIcon.innerText = currentTheme === 0 ? '🌞' : '🌙'; // Utilise un soleil et une lune
+        });
+    </script>
+</body>
+</html>
